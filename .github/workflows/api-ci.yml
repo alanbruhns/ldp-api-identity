@@ -1,0 +1,73 @@
+name: Publish Docker Image and Update Repository
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Docker Buildx for cross-platform builds (optional, but recommended)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PAT }}
+
+      # Build and push the Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/Web/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ldp-identity-api:${{ github.run_number }}
+
+  update-repository:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      # Install yq for YAML processing
+      - name: Install yq
+        run: |
+          sudo add-apt-repository -y ppa:rmescandon/yq
+          sudo apt-get update
+          sudo apt-get install yq -y
+
+      # Checkout the repository to update
+      - name: Checkout ldp-platform-values repository
+        uses: actions/checkout@v3
+        with:
+          repository: alanbruhns/ldp-platform-values
+          path: ldp-platform-values
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Update the file with the new image tag
+      - name: Update ldp-identity-api.values.yaml
+        run: |
+          IMAGE_TAG="${{ secrets.DOCKER_HUB_USERNAME }}/ldpidentityapi:${{ github.run_number }}"
+          FILE_PATH="ldp-platform-values/main/ldp-identity-api.values.yaml"
+          echo "Updating $FILE_PATH with image tag $IMAGE_TAG"
+          yq eval ".image.tag = \"$IMAGE_TAG\"" -i $FILE_PATH
+
+      # Commit and push changes
+      - name: Commit and push changes
+        run: |
+          cd ldp-platform-values
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add main/ldp-identity-api.values.yaml
+          git commit -m "Update image tag to $IMAGE_TAG"
+          git push
