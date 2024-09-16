@@ -5,21 +5,21 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy the .csproj files and restore dependencies
-COPY ["src/Web/LDPIdentityAPI.Web.csproj", "src/Web/"]
+COPY ["src/Web/Web.csproj", "src/Web/"]
 COPY ["src/Application/Application.csproj", "src/Application/"]
 COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
 COPY ["src/Domain/Domain.csproj", "src/Domain/"]
 
-RUN dotnet restore "src/Web/LDPIdentityAPI.Web.csproj"
+RUN dotnet restore "src/Web/Web.csproj"
 
 # Copy the remaining source files
 COPY . .
 
 # Build the application
-RUN dotnet build "src/Web/LDPIdentityAPI.Web.csproj" -c Release -o /app/build
+RUN dotnet build "src/Web/Web.csproj" -c Release -o /app/build
 
 # Publish the application to a folder
-RUN dotnet publish "src/Web/LDPIdentityAPI.Web.csproj" -c Release -o /app/publish
+RUN dotnet publish "src/Web/Web.csproj" -c Release -o /app/publish
 
 # Use the official .NET 8.0 runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
@@ -36,4 +36,4 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 80
 
 # Run the application
-ENTRYPOINT ["dotnet", "LDPIdentityAPI.Web.dll"]
+ENTRYPOINT ["dotnet", "Web.dll"]
