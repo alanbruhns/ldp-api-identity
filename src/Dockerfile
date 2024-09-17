@@ -1,29 +1,27 @@
-# Use the official .NET 8.0 SDK image as a build environment
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Use the official .NET SDK image to build the application
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
-# Set the working directory
-WORKDIR /src
+# Set the working directory inside the container
+WORKDIR /app
 
-# Copy the .csproj files and restore dependencies
-COPY ["Web/Web.csproj", "Web/"]
-COPY ["Application/Application.csproj", "Application/"]
-COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
-COPY ["Domain/Domain.csproj", "Domain/"]
+# Copy the project file and restore dependencies
+COPY *.csproj ./
+RUN dotnet restore
 
-# Restore dependencies
-RUN dotnet restore "Web/Web.csproj"
-
-# Copy the remaining source files
+# Copy the rest of the application code
 COPY . .
 
 # Build the application
-WORKDIR /src/Web
-RUN dotnet build "Web.csproj" -c Release -o /app/build
+RUN dotnet publish -c Release -o out
 
-# Publish the application to a folder
-RUN dotnet publish "Web.csproj" -c Release -o /app/publish
+# Use the official .NET runtime image to run the application
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 
-# Use the official .NET 8.0 runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+# Set the working directory inside the container
 WORKDIR /app
 
+# Copy the built application from the build image
+COPY --from=build /app/out .
+
+# Specify the command to run the application
+ENTRYPOINT ["dotnet", "WeatherApi.dll"]
