@@ -9,8 +9,8 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
-imagePullSecrets: 
-  - name: "docker-hub-secret"
+imagePullSecrets: {}
+
 nameOverride: ""
 fullnameOverride: ""
 
@@ -42,7 +42,6 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 80
-  targetPort: 5000
 
 ingress:
   enabled: false
@@ -75,11 +74,11 @@ resources: {}
 livenessProbe:
   httpGet:
     path: /healthz
-    port: 5000
+    port: http
 readinessProbe:
   httpGet:
     path: /readyz
-    port: 5000
+    port: http
 
 autoscaling:
   enabled: false
