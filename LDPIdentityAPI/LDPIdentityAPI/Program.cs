@@ -1,20 +1,26 @@
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "wwwroot",
+    ApplicationName = typeof(Program).Assembly.FullName,
+    EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
+    ContentRootPath = Directory.GetCurrentDirectory(),
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5000); // HTTP
+});
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 var summaries = new[]
 {
