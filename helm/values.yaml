@@ -74,11 +74,11 @@ resources: {}
 
 livenessProbe:
   httpGet:
-    path: /swagger
+    path: /healtz
     port: http
 readinessProbe:
   httpGet:
-    path: /swagger
+    path: /readyz
     port: http
 
 autoscaling:

@@ -15,12 +15,16 @@ builder.WebHost.ConfigureKestrel(options =>
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks(); // Add health check services
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseHealthChecks("/healthz"); // Liveness probe endpoint
+app.UseHealthChecks("/readyz");  // Readiness probe endpoint
 
 var summaries = new[]
 {
